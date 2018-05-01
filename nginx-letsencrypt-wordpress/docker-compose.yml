@@ -1,0 +1,51 @@
+version: '3'
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - "./my_custom_proxy_settings.conf:/etc/nginx/conf.d/my_custom_proxy_settings.conf"
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    ports:
+      - 80:80
+      - 443:443
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+    volumes:
+      - ./wordpress:/var/www/html
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: user
+      WORDPRESS_DB_PASSWORD: password
+      VIRTUAL_HOST: sub.example.domain
+      LETSENCRYPT_HOST: sub.example.domain
+      LETSENCRYPT_EMAIL: mail@example.domain
+    depends_on:
+      - db
+  db:
+    image: mysql:latest
+    restart: unless-stopped
+    volumes:
+      - ./wordpress-database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD": "root_password",
+      MYSQL_DATABASE: "wordpress",
+      MYSQL_USER: "user",
+      MYSQL_PASSWORD: "password"
+    depends_on:
+      - nginx-proxy
+volumes:
+    certs:
