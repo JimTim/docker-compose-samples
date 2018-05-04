@@ -1,10 +1,10 @@
-version: '3'
+version: '2'
 services:
   nginx-proxy:
     image: jwilder/nginx-proxy
     restart: always
     volumes:
-      - certs:/etc/nginx/certs:ro
+      - ./certs:/etc/nginx/certs:ro
       - /etc/nginx/vhost.d
       - /usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -18,7 +18,7 @@ services:
     image: jrcs/letsencrypt-nginx-proxy-companion
     restart: always
     volumes:
-      - certs:/etc/nginx/certs:rw
+      - ./certs:/etc/nginx/certs:rw
       - /var/run/docker.sock:/var/run/docker.sock:ro
   wordpress:
     image: wordpress:latest
@@ -47,5 +47,3 @@ services:
       MYSQL_PASSWORD: "password"
     depends_on:
       - nginx-proxy
-volumes:
-    certs:
